@@ -1,0 +1,66 @@
+/* 
+    AUTHOR: Dieter Randolph
+*/
+
+/* ------------------------------------------ */
+/* RESETS, BASIC PAGE SETUP, BASIC TYPOGRAPHY */
+/* ------------------------------------------ */
+* { margin: 0; padding: 0; }
+:focus { outline: 0; }
+html {  }
+body { background-color: #ccc; }
+ul { list-style-type: none; }
+p {  }
+a { outline: none; }
+a img { border: none; }
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	vertical-align: baseline;
+}
+section, article, header, footer, nav, aside, hgroup { display: block; }
+/* END RESET */
+
+/* ------------------------------------------ */
+/* TOOLBOX CSS */
+/* ------------------------------------------ */
+a:link, a:visited {}
+a:hover {}
+/* END TOOLBOX */
+
+/* ------------------------------------------ */
+/* PAGE STRUCTURE */
+/* ------------------------------------------ */
+#cli_holder, #cli_input {
+  font-family: monospace;
+  color: #222;
+  font-size: 12px;
+  line-height: 1.5em;
+}
+#cli_holder {
+  margin: 20px;
+  padding: 10px;
+  height: 300px;
+  overflow: auto;
+  background-color: #fff;
+  font-family: monospace;
+  color: #222;
+}
+#cli_input {
+  border: none;
+  font-weight: bold;
+  width: 100%;
+}
+#cli_transcript li.request {
+  color: #063;
+  cursor: pointer;
+}
+#cli_transcript li.response {
+  color: #036;
+  padding-left: 1em;
+}
+#cli_transcript li.response strong {
+  text-transform: uppercase;
+  font-weight: normal;
+}
+/* END STRUCTURE */

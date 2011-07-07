@@ -1,0 +1,66 @@
+Legend: 
+
+> Things a user types
+Response from Apigee
+Links that pop up in a new window
+↩ return key press
+
+
+
+> create app favewits↩
+
+  App endpoint: https://favewits-api.apigee.com
+  
+  [APP FAVEWITS CREATED] 
+
+
+> favewits add provider twitter↩
+
+  Twitter uses OAuth 1.0a. You will need the Consumer Key and Consumer Secret that Twitter provides for your app, 
+  see: http://dev.twitter.com/applications
+
+[TWITTER ADDED TO FAVEWITS]
+
+
+> favewits configure twitter 89aoi8a9a98 aio89ai8ad89a092↩
+
+  Twitter Consumer Key and Secret added to favewits.
+  Users can now be authenticated with twitter. 
+  
+  [TWITTER IS NOW CONFIGURED]
+
+
+> favewits add user marsh@earth2marsh.com supersecret0↩
+
+  Username and password exchanged for an Apigee SmartKey
+  The SmartKey for marsh@earth2marsh.com is "220961tty9089"
+  You'll use this SmartKey to authorize all API calls on behalf of this user. 
+  Keep this secret safe!
+
+  [USER MARSH@EARTH@MARSH.COM ADDED TO FAVEWITS]
+
+
+> favewits get twitter authorization for smartkey 220961tty9089↩
+  
+  The authorization url is https://api.twitter.com/oauth/authorize?taoethth….
+  Sign in with Twitter and make favewits a trusted application.
+
+
+> favewits add twitter access 53745772890 53tn5hd369iue to smartkey 220961tty9089 ↩
+
+  Twitter Access Key and Secret added to marsh@earth2marsh.com’s SmartKey.
+  You can now make authenticated requests to the Twitter API with this SmartKey.
+
+  [SMARTKEY 220961tty9089 IS AUTHORIZED WITH TWITTER]
+ 
+
+> favewits get https://favewits-api.apigee.com/twitter/1/statuses/home_timeline.json?smartkey=220961tty9089↩
+  
+  The API responded with: 200 OK
+  [{"id_str":"76067389040640000","in_reply_to_status_id":null,"user":[…]
+  
+  Congrats, you've made a successful call! Download the framework and add the
+  following line of code to start making authorized requests using SmartKeys:
+    endpoint = "https://favewits-api.apigee.com";
+
+  [SOURCE SETUP COMPLETE]
