@@ -49,9 +49,9 @@ a:hover {}
 #cli_input {
   border: none;
   font-weight: bold;
-  width: 100%;
+  width: 95%;
 }
-li.request:before {
+li.request:before, .prompt:before {
   content:"> ";
 }
 #cli_transcript li.request {
