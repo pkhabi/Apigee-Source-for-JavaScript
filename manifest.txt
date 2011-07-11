@@ -1,0 +1,9 @@
+v2/index.html
+v2/howto.html
+v2/js/apigee_api.js
+v2/js/apigee_cli.js
+v2/js/base64_min.js
+v2/js/cli_layer.js
+v2/js/html5shiv.js
+v2/js/jquery_min.js
+v2/css/main.css
