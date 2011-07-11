@@ -19,7 +19,6 @@ $(document).ready(function() {
       theCli.doCommand(this.value);
       setInputHistory(this.value);
       this.value = '';
-      $('#cli_holder').scrollTop(document.getElementById("cli_holder").scrollHeight);
       setTranscriptClick();
     } else if (event.which == '38') {
       var newValue = "";
@@ -60,6 +59,10 @@ $(document).ready(function() {
   }
   
 });
+
+$.after_request = function() {
+  $('#cli_holder').scrollTop(document.getElementById("cli_holder").scrollHeight);
+}
 
 function showResponseMessage(responseMessage) {
   $('#cli_transcript').append('<li class="response">'+responseMessage+'</li>');
