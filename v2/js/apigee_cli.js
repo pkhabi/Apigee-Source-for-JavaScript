@@ -55,12 +55,8 @@ function ApigeeApp(appName,requestParams) {
   this.create = function(appName) {
     var appName = parseAndReturn(appName);
     if (appName.hasOwnProperty('appName')) {
-/*
-      if (appName.hasOwnProperty('endpoint')) {
-        theApp.api.defaults.endpoint = appName.endpoint + '/';
-      }
-*/
-      showResponseMessage('App endpoint: '+appName.endpoint+'<br />[<strong>'+appName.appName+' created</strong> - You\'ve completed step 1 of 5]');
+      //theApp.api.defaults.endpoint = appName.endpoint + '/v1/';
+      showResponseMessage('App endpoint: '+appName.endpoint+'<br /><span>[<strong>'+appName.appName+' created</strong> - You\'ve completed step 1 of 5]</span>');
     } else {
       theApp.api.request('post','apps',{'appName':appName,'displayName':appName,'version':'0'},{'callback':'cliApps["'+appName+'"].create'});
     }
@@ -76,7 +72,7 @@ function ApigeeApp(appName,requestParams) {
     } else {
       var requestParams = parseAndReturn(requestParams);
       if (requestParams.hasOwnProperty("provider") && theApp.providers.hasOwnProperty(requestParams.provider)) {
-        showResponseMessage(requestParams.provider+' Consumer Key and Secret added to '+theApp.appName+'.  Users can now be authenticated with '+requestParams.provider+'.<br />[<strong>'+requestParams.provider+' is now configured</strong> - You\'ve completed step 3 of 5]');
+        showResponseMessage(requestParams.provider+' Consumer Key and Secret added to '+theApp.appName+'.  Users can now be authenticated with '+requestParams.provider+'.<br /><span>[<strong>'+requestParams.provider+' is now configured</strong> - You\'ve completed step 3 of 5]</span>');
       }
     }
   }
@@ -85,7 +81,7 @@ function ApigeeApp(appName,requestParams) {
       var providername = requestParams[0];
       if (!(theApp.providers.hasOwnProperty(providername))) {
         theApp.providers[providername] = new ApigeeProvider(providername);   
-        showResponseMessage(providername+' uses OAuth 1.0a. You will need the Consumer Key and Consumer Secret that '+providername+' provides for your app, see: <a href="http://dev.twitter.com/applications" title="documentation">http://dev.twitter.com/applications</a><br />[<strong>'+providername+' added to '+theApp.appName+'</strong> - You\'ve completed step 2 of 5]');   
+        showResponseMessage(providername+' uses OAuth 1.0a. You will need the Consumer Key and Consumer Secret that '+providername+' provides for your app, see: <a href="http://dev.twitter.com/applications" title="documentation">http://dev.twitter.com/applications</a><br /><span>[<strong>'+providername+' added to '+theApp.appName+'</strong> - You\'ve completed step 2 of 5]</span>');   
       }
     }
   }
@@ -100,24 +96,7 @@ function ApigeeApp(appName,requestParams) {
       var requestParams = parseAndReturn(requestParams);
       if (requestParams.hasOwnProperty('userName') && requestParams.hasOwnProperty('smartKey')) {
         theApp.users[requestParams.userName] = new ApigeeUser(requestParams);
-        showResponseMessage('Username and password exchanged for an Apigee SmartKey.  The SmartKey for '+requestParams.userName+' is '+requestParams.smartKey+'.  You\'ll use this SmartKey to authorize all API calls on behalf of this new user.<br />Keep this secret safe!<br />[<strong>user '+requestParams.userName+' added to '+theApp.appName+'</strong>]<br /><a href="http://api.apigee.com/v1/apps/'+theApp.appName+'/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com" title="authenticate in a new window" target="_blank">Connect the '+theApp.appName+' application user to a twitter account</a> for API request testing.<br />[<strong>After you connect the user to the twitter account</strong> - You\'ve completed step 4 of 5]'); 
-        
-/*
-        https://api.apigee.com/v1/ is the endpoint
-        https://api.apigee.com/v1/apps/fw0/providers/twitter/credentials.json
-        http://api.apigee.com/v1/apps/fw0/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com
-        
-        http://'+theApp.appName+'-api.apigee.com/v1/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com
-        
-        
-        http://api.twitter.com/oauth/authorize?oauth_token=
-        2. Authenticate (Start the dance)
-    http://favewits11-api.apigee.com/v1/providers/twitter/authenticate?smartkey=8bdb28f7-15a1-4f00-bd34-4ea5b2f95686&app_callback=www.google.com
-
-3. Issue a request
-    http://favewits11-api.apigee.com/v1/twitter/1/statuses/home_timeline.xml?smartkey=8bdb28f7-15a1-4f00-bd34-4ea5b2f95686
-*/
-        
+        showResponseMessage('Username and password exchanged for an Apigee SmartKey.  The SmartKey for '+requestParams.userName+' is '+requestParams.smartKey+'.  You\'ll use this SmartKey to authorize all API calls on behalf of this new user.<br />Keep this secret safe!<br /><span>[<strong>user '+requestParams.userName+' added to '+theApp.appName+'</strong>]</span><br /><a href="http://'+theApp.appName+'-api.apigee.com/v1/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=https://apigee.com/oauthSuccess.jsp" title="authenticate in a new window" target="_blank">Connect the '+theApp.appName+' application user to a twitter account</a> for API request testing.<br /><span>[<strong>After you connect the user to the twitter account</strong> - You\'ve completed step 4 of 5]</span>');         
       }
     }
   }
@@ -131,27 +110,30 @@ function ApigeeApp(appName,requestParams) {
     }
   }
   this.get = function(requestParams) {
-    if ($.isArray(requestParams)) {
-      if (theApp.providers.hasOwnProperty(requestParams[0]) && (requestParams.length === 1)) {
-        console.log('request here');
-        /*
-var newRequest = theApp.api.request('get','apps/'+theApp.appName+'/providers/'+requestParams[0]+'/authurl.json',{},{});
-        newRequest.responseMessage = 'The authorization url is <a href="https://api.twitter.com/oauth/authorize?taoethth">https://api.twitter.com/oauth/authorize?taoethth</a>.  Sign in with '+requestParams[0]+' and make '+theApp.appName+' a trusted application.';
-        showResponseMessage(newRequest.responseMessage);
+    theApp.verbRequest('get',requestParams);
+  }
+/*
+  this.post = function(requestParams) {
+    theApp.verbRequest('post',requestParams);
+  }
+  this.put = function(requestParams) {
+    theApp.verbRequest('put',requestParams);
+  }
+  this.delete = function(requestParams) {
+    theApp.verbRequest('delete',requestParams);
+  }
 */
-      } else {
-        var newRequest = theApp.api.request('get',requestParams[0]);
-        newRequest.responseMessage = '';
-        showResponseMessage(newRequest.responseMessage);
-      }
-    } else if (requestParams.hasOwnProperty('authurl') && requestParams.hasOwnProperty('authorization')) {
-      //pop a new window with authurl so that we can do the dance; example response headers are:
-      /* {“authurl”:”http://api.twitter.com/oauth/request_token”,”authorization”:{"oauth_nonce":"QP70eNmVz8jvdPevU3oJD2AfF7R7odC2XJcn4XlZJqk","oauth_callback":"https%3A%2F%2Fapigee.com%2F%cli%2Fdance?3A3005%2Fthe_dance%2Fprocess_callback%3Fservice_provider_id%3D11","oauth_signature_method":"HMAC-SHA1","oauth_timestamp":"1272323042","oauth_consumer_key":"GDdmIQH6jhtmLUypg82g","oauth_signature":"8wUi7m5HFQy76nowoCThusfgB%2BQ%3D","oauth_version":"1.0"}} */
+  this.verbRequest = function(verb,requestParams) {
+    if ($.isArray(requestParams)) {
+      theApp.api.request(verb,requestParams,{},{'popnewwin':'true','endpoint':'https://'+theApp.appName+'-api.apigee.com/v1','callback':'cliApps["'+theApp.appName+'"].["'+verb+'"]'});
+    } else {
+      var requestParams = parseAndReturn(requestParams);
+      console.log('response made');
+      console.log(requestParams);
     }
   }
   this.init = function(appName,requestParams) {
     //var endPoint = 'https://'+appName+'-api.apigee.com';
-    //var endPoint = 'http://fountainhead.apigee.com';
     var endPoint = 'https://api.apigee.com/v1/';
     var appParams = (requestParams == null) ? endPoint : [endPoint].concat(requestParams).join(',');
     theApp.api = (requestParams === null) ? new $.apigee_api(endPoint) : new $.apigee_api(endPoint,requestParams[0],requestParams[1])
