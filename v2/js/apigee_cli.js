@@ -10,7 +10,7 @@ function ApigeeCli() {
         theCli.apps[commandObject.noun][commandObject.verb](commandObject.params);     
       } else if (commandObject.noun === 'create') {
         var appName = commandObject.verb;
-        if (!(theCli.apps[appName])) theCli.apps[appName] = new ApigeeApp(appName,commandObject.params); //possible to pass in username, password here and have that respected
+        if (!(theCli.apps[appName])) theCli.apps[appName] = new ApigeeApp(appName,commandObject.params);
       } else {
         console.log('Could not build request');
       }
@@ -112,28 +112,15 @@ function ApigeeApp(appName,requestParams) {
   this.get = function(requestParams) {
     theApp.verbRequest('get',requestParams);
   }
-/*
-  this.post = function(requestParams) {
-    theApp.verbRequest('post',requestParams);
-  }
-  this.put = function(requestParams) {
-    theApp.verbRequest('put',requestParams);
-  }
-  this.delete = function(requestParams) {
-    theApp.verbRequest('delete',requestParams);
-  }
-*/
   this.verbRequest = function(verb,requestParams) {
     if ($.isArray(requestParams)) {
-      theApp.api.request(verb,requestParams,{},{'popnewwin':'true','endpoint':'https://'+theApp.appName+'-api.apigee.com/v1','callback':'cliApps["'+theApp.appName+'"].["'+verb+'"]'});
+      theApp.api.request(verb,requestParams,{},{'endpoint':'http://'+theApp.appName+'-api.apigee.com/v1','callback':'cliApps["'+theApp.appName+'"].'+verb});
     } else {
       var requestParams = parseAndReturn(requestParams);
-      console.log('response made');
-      console.log(requestParams);
+      showResponseMessage('Congrats, you\'ve made an authenticated call!<br /><span>[<strong>Source Setup Complete!</strong>]</span><br /><a href="#" title="download">Download the code library</a> and paste your endpoint into the sample app source code: http://'+theApp.appName+'-api.apigee.com<br />Upload the sample app to the web server of your choice and off you go!<br />Thank you for getting your app started with Apigee Source.  Please send feedback to <a href="mailto:feedback@apigee.com?subject=Source Labs Feedback" title="send feedback">feedback@apigee.com</a>');      
     }
   }
   this.init = function(appName,requestParams) {
-    //var endPoint = 'https://'+appName+'-api.apigee.com';
     var endPoint = 'https://api.apigee.com/v1/';
     var appParams = (requestParams == null) ? endPoint : [endPoint].concat(requestParams).join(',');
     theApp.api = (requestParams === null) ? new $.apigee_api(endPoint) : new $.apigee_api(endPoint,requestParams[0],requestParams[1])
@@ -188,14 +175,3 @@ function parseAndReturn(theText) {
   }
   return theJson;
 }
-
-/*
-TRANSLATION MAPPING
-create app favewits - create APPNAME
-favewits configure twitter 89aoi8a9a98 aio89ai8ad89a092 - APPNAME configure providername CONSUMERKEY CONSUMERSECRET
-favewits add provider twitter - APPNAME add_provider providername
-favewits add user marsh@earth2marsh.com supersecret0 - APPNAME add_user username PASSWORD
-favewits add twitter access 53745772890 53tn5hd369iue to smartkey 220961tty9089 - APPNAME add providername ACCESSKEY SECRET SMARTKEY
-favewits get twitter authorization for smartkey 220961tty9089 - APPNAME get providername SMARTKEY
-favewits get /twitter/1/statuses/home_timeline.json?smartkey=220961tty9089 - APPNAME get URL
-*/
