@@ -58,37 +58,39 @@
         var returnObject = {};
         var verb = verb || theApi.defaults.verb;
         var headers = headers || {};
-        var requestArray = request.split("?");
+        var requestArray = request.toString().split("?");
         var requestHeaders = (requestArray.length > 1) ? requestArray[1].split('&') : false;
         if (requestHeaders) {
-          request = requestHeaders[0];
-          var extraHeaders = {};
+          var extraHeaders = {
+            'X-PINGOTHER':'pingpong',
+				    'X-Requested-With':'XMLHttpRequest'
+          };
           for (var i=0; i<requestHeaders.length; i++) {
             var thisPair = requestHeaders[i].split('=');
-            extraHeaders.thisPair[0] = thisPair[i];
+            extraHeaders[thisPair[0]] = requestHeaders[i].substring(thisPair[0].length + 1);
           }
           $.extend(extraHeaders, headers);
           headers = extraHeaders;
         }
-        if (theApi.smartkey) headers = $.extend(true, headers, {"smartkey":theApi.smartkey});
-        if (theApi.authorization) headers = $.extend(true, headers, {"Authorization":"Basic "+theApi.authorization});
+        if (theApi.smartkey && (verb != 'get')) headers = $.extend(true, headers, {"smartkey":theApi.smartkey});
+        if (theApi.authorization && (verb != 'get')) headers = $.extend(true, headers, {"Authorization":"Basic "+theApi.authorization});
         var settings = $.extend({}, theApi.defaults, settings);
         settings.verb = verb;
-        var fullRequest = request.split(".")
+        var fullRequest = request.toString().split(".")
         request = fullRequest[0];
         if (fullRequest.length > 1) settings.type = fullRequest[1];
         if (settings.type === 'jsonp') settings.type = 'json';
-        console.log('url: '+settings.endpoint+request+'.'+settings.type.split(" ")[0]);
-        console.log('data: '+JSON.stringify(headers));
-        console.log('verb: '+settings.verb);
-        //var requestData = (settings.verb === 'get') ? null : null; //JSON.stringify(headers);
+        var requestData = (settings.verb === 'get') ? null : JSON.stringify(headers);
+        var requestType = (settings.verb === 'get') ? null : "application/"+settings.type;
+        var requestDataType = (settings.verb === 'get') ? null : settings.type;
+        if (settings.popnewwin && (settings.popnewwin === 'true')) window.open(settings.endpoint+request+'.'+settings.type.split(" ")[0]);
         $.ajax({
           url: settings.endpoint+request+'.'+settings.type.split(" ")[0],
           headers: headers,
-          data: JSON.stringify(headers),
+          data: requestData,
           type: settings.verb,
-          dataType: settings.type,
-          contentType: "application/json",
+          dataType: requestDataType,
+          contentType: requestType,
           xhrFields: {
             withCredentials: true
           },
@@ -97,15 +99,20 @@
             returnObject.payload = data;
             returnObject.xhr = jqXHR;
             if (settings.callback) {
-              var callbackFunction = new Function(settings.callback+'(\''+JSON.stringify(data)+'\')');
+              var textData = ((typeof data) != 'string') ? JSON.stringify(data) : data;
+              var callbackFunction = new Function(settings.callback+'(\''+textData.replace(/'/g, "\\'")+'\')');
               callbackFunction();
             }     
+            $.after_request();
           },
           error: function(jqXHR, textStatus, errorThrown) {
             responseMessage = textStatus+" ("+errorThrown+")";
-            console.log(responseMessage);
             returnObject.response_message = responseMessage;
             returnObject.xhr = jqXHR;
+            try {
+              showResponseMessage('Sorry, that didn’t work. Please <a href="#" title="instructions">check the instructions</a> and try again.');
+            } catch (e) {}
+            $.after_request();
           }
         });
         return returnObject;
@@ -123,35 +130,41 @@
     }
     this.doesLocalStorage = this.checkLocalStorage();
 /**
-  * base64-encodes username and password and makes request for smartkey.  If response is successful, adds this to the ApigeeAPI object, which in turn adds it as a header to each subsequent request
-  * if username and password are not supplied, but there is a smartkey in local storage, use that instead.
+  * base64-encodes username and password, adds this to the ApigeeAPI object, which in turn adds it as a header to each subsequent request
 */
     this.init = function(username,password) {
       var username = username || "";
       var password = password || "";
       var authParam = $.base64Encode(username+':'+password);
-/*
-      $.ajax({
-        url: "./sample.json", //this is not the production URL, and will need to be updated
-        headers: {"auth":authParam},
-        type: "get",
-        dataType: "json",
-        success: function(data,textStatus,jqXHR) {
-          if (data.smartkey) theApi.smartkey = data.smartkey;
-        }
-      });
-*/
-      //temporary lines to enable basic auth until smartkey is working
       theApi.authorization = authParam; 
-      theApi.username = username;
-      theApi.password = password;
     };
+    var uid = getUrlParam('uid');
     if (username && password) {
       this.init(username,password);
+    } else if (uid) {
+      theApi.authorization = uid;
     } else if (this.doesLocalStorage && localStorage.smartkey) {
       theApi.smartkey = localStorage.smartkey;
     }
   }  
+  
+  function getUrlParam(paramName) {
+    var paramValue = false;
+    var urlArray = document.location.href.toString().split("?");
+    if (urlArray.length > 1) {
+      var paramArray = urlArray[1].toString().split("&");
+      for (var i=0; i<paramArray.length; i++) {
+        var thisParamSet = paramArray[i].toString().split("=");
+        if (thisParamSet[0] == paramName) {
+          paramValue = paramArray[i].substring(thisParamSet[0].length + 1);
+          break;
+        }
+      }
+    }
+    return paramValue;
+  }
+  
+  $.after_request = function() {}
     
   $.apigee_api = function(endpoint,username,password) {
     return new ApigeeApi(endpoint || false,username || false,password || false);

@@ -26,6 +26,7 @@ function ApigeeCli() {
       " add user " : " add_user ",
       " to smartkey " : " ",
       " authorization for smartkey " : " ",
+      " authorization" : "",
       " access " : " "
     };
     for (var beforeString in extraVerbiage) {
@@ -52,24 +53,31 @@ function ApigeeApp(appName,requestParams) {
   this.users = {};
   this.preparams = {};
   this.create = function(appName) {
-    if (appName) {
-      var newRequest = theApp.api.request('post','apps',{'appName':appName,'displayName':appName,'version':'0'});
-      newRequest.responseMessage = 'App endpoint: '+theApp.api.defaults.endpoint+'<br /><strong>[app '+appName+' created]</strong>';
-      showResponseMessage(newRequest.responseMessage);
+    var appName = parseAndReturn(appName);
+    if (appName.hasOwnProperty('appName')) {
+/*
+      if (appName.hasOwnProperty('endpoint')) {
+        theApp.api.defaults.endpoint = appName.endpoint + '/';
+      }
+*/
+      showResponseMessage('App endpoint: '+appName.endpoint+'<br />[<strong>'+appName.appName+' created</strong> - You\'ve completed step 1 of 5]');
+    } else {
+      theApp.api.request('post','apps',{'appName':appName,'displayName':appName,'version':'0'},{'callback':'cliApps["'+appName+'"].create'});
     }
   }
   this.configure = function(requestParams) {
     if ($.isArray(requestParams)) {
       if (theApp.providers.hasOwnProperty(requestParams[0]) && (requestParams.length === 3)) {
         var providerName = requestParams[0];
-        var newParams = {'consumerkey':requestParams[1],'consumersecret':requestParams[2]};
+        var newParams = {'consumerKey':requestParams[1],'consumerSecret':requestParams[2]};
         $.extend(theApp.providers[providerName].preparams, newParams);
-        var newRequest = theApp.api.request('post','apps/'+theApp.appName+'/providers/'+providerName,newParams,{'callback':'cliApps['+theApp.appName+'].configure'}); 
-        newRequest.responseMessage = providerName+' Consumer Key and Secret added to '+theApp.appName+'.  Users can now be authenticated with '+providerName+'.<br /><strong>['+providerName+' is now configured]</strong>';
-        showResponseMessage(newRequest.responseMessage);
+        theApp.api.request('post','apps/'+theApp.appName+'/providers/'+providerName+'/credentials',newParams,{'callback':'cliApps["'+theApp.appName+'"].configure'}); 
       }
-    } else if (requestParams.hasOwnProperty(providername) && theApp.providers.hasOwnProperty(requestParams.providername)) {
-      theApp.providers[requestParams.providername].configure(requestParams);
+    } else {
+      var requestParams = parseAndReturn(requestParams);
+      if (requestParams.hasOwnProperty("provider") && theApp.providers.hasOwnProperty(requestParams.provider)) {
+        showResponseMessage(requestParams.provider+' Consumer Key and Secret added to '+theApp.appName+'.  Users can now be authenticated with '+requestParams.provider+'.<br />[<strong>'+requestParams.provider+' is now configured</strong> - You\'ve completed step 3 of 5]');
+      }
     }
   }
   this.add_provider = function(requestParams) {
@@ -77,7 +85,7 @@ function ApigeeApp(appName,requestParams) {
       var providername = requestParams[0];
       if (!(theApp.providers.hasOwnProperty(providername))) {
         theApp.providers[providername] = new ApigeeProvider(providername);   
-        showResponseMessage(providername+' uses OAuth 1.0a. You will need the Consumer Key and Consumer Secret that '+providername+' provides for your app.<br /><strong>['+providername+' added to '+theApp.appName+']</strong>');   
+        showResponseMessage(providername+' uses OAuth 1.0a. You will need the Consumer Key and Consumer Secret that '+providername+' provides for your app, see: <a href="http://dev.twitter.com/applications" title="documentation">http://dev.twitter.com/applications</a><br />[<strong>'+providername+' added to '+theApp.appName+'</strong> - You\'ve completed step 2 of 5]');   
       }
     }
   }
@@ -86,18 +94,37 @@ function ApigeeApp(appName,requestParams) {
       var username = requestParams[0];
       var password = requestParams[1];
       if (!(theApp.users.hasOwnProperty(username))) {
-        var newRequest = theApp.api.request('post','apps/'+theApp.appName+'/users',{'username':username,'password':password},{'callback':'cliApps['+theApp.appName+'].add_user'});
-        newRequest.responseMessage = 'Username and password exchanged for an Apigee SmartKey.  The SmartKey for '+username+' is 220961tty9089.  You\'ll use this SmartKey to authorize all API calls on behalf of this user.  Keep this secret safe!<br /><strong>[user '+username+' added to '+theApp.appName+']</strong>';
-        showResponseMessage(newRequest.responseMessage);
+        theApp.api.request('post','apps/'+theApp.appName+'/users',{'userName':username,'fullName':username,'password':password},{'callback':'cliApps["'+theApp.appName+'"].add_user'});
       }
-    } else if (requestParams.hasOwnProperty('username') && (requestParams.hasOwnProperty('userid') && requestParams.hasOwnProperty('smartkey'))) {
-      theApp.users[requestParams.username] = new ApigeeUser(requestParams.username, requestParams.userid, requestParams.smartkey);
+    } else {
+      var requestParams = parseAndReturn(requestParams);
+      if (requestParams.hasOwnProperty('userName') && requestParams.hasOwnProperty('smartKey')) {
+        theApp.users[requestParams.userName] = new ApigeeUser(requestParams);
+        showResponseMessage('Username and password exchanged for an Apigee SmartKey.  The SmartKey for '+requestParams.userName+' is '+requestParams.smartKey+'.  You\'ll use this SmartKey to authorize all API calls on behalf of this new user.<br />Keep this secret safe!<br />[<strong>user '+requestParams.userName+' added to '+theApp.appName+'</strong>]<br /><a href="http://api.apigee.com/v1/apps/'+theApp.appName+'/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com" title="authenticate in a new window" target="_blank">Connect the '+theApp.appName+' application user to a twitter account</a> for API request testing.<br />[<strong>After you connect the user to the twitter account</strong> - You\'ve completed step 4 of 5]'); 
+        
+/*
+        https://api.apigee.com/v1/ is the endpoint
+        https://api.apigee.com/v1/apps/fw0/providers/twitter/credentials.json
+        http://api.apigee.com/v1/apps/fw0/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com
+        
+        http://'+theApp.appName+'-api.apigee.com/v1/providers/twitter/authenticate?smartkey='+requestParams.smartKey+'&app_callback=www.google.com
+        
+        
+        http://api.twitter.com/oauth/authorize?oauth_token=
+        2. Authenticate (Start the dance)
+    http://favewits11-api.apigee.com/v1/providers/twitter/authenticate?smartkey=8bdb28f7-15a1-4f00-bd34-4ea5b2f95686&app_callback=www.google.com
+
+3. Issue a request
+    http://favewits11-api.apigee.com/v1/twitter/1/statuses/home_timeline.xml?smartkey=8bdb28f7-15a1-4f00-bd34-4ea5b2f95686
+*/
+        
+      }
     }
   }
   this.add = function(requestParams) {
     if ($.isArray(requestParams)) {
       if (theApp.providers.hasOwnProperty(requestParams[0]) && (requestParams.length === 4)) {
-        var newRequest = theApp.api.request('post','smartkeys/'+requestParams[3]+'/providers/'+requestParams[0],{"oauth_token":requestParams[1],"oauth_token_secret":requestParams[2]});
+        var newRequest = theApp.api.request('post','smartkeys/'+requestParams[3]+'/providers/'+requestParams[0],{"oauthToken":requestParams[1],"oauth_token_secret":requestParams[2]});
         newRequest.responseMessage = requestParams[0]+' Access Key and Secret added to the SmartKey.  You can now make authenticated requests to the '+requestParams[0]+' API with this SmartKey.<br /><strong>[smartkey '+requestParams[3]+' is authorized with '+requestParams[0]+']</strong>';
         showResponseMessage(newRequest.responseMessage);
       }
@@ -105,10 +132,13 @@ function ApigeeApp(appName,requestParams) {
   }
   this.get = function(requestParams) {
     if ($.isArray(requestParams)) {
-      if (theApp.providers.hasOwnProperty(requestParams[0]) && (requestParams.length === 2)) {
-        var newRequest = theApp.api.request('get','smartkeys/'+requestParams[1]+'/providers/'+requestParams[0],{'hidekeys':'false'}); 
+      if (theApp.providers.hasOwnProperty(requestParams[0]) && (requestParams.length === 1)) {
+        console.log('request here');
+        /*
+var newRequest = theApp.api.request('get','apps/'+theApp.appName+'/providers/'+requestParams[0]+'/authurl.json',{},{});
         newRequest.responseMessage = 'The authorization url is <a href="https://api.twitter.com/oauth/authorize?taoethth">https://api.twitter.com/oauth/authorize?taoethth</a>.  Sign in with '+requestParams[0]+' and make '+theApp.appName+' a trusted application.';
         showResponseMessage(newRequest.responseMessage);
+*/
       } else {
         var newRequest = theApp.api.request('get',requestParams[0]);
         newRequest.responseMessage = '';
@@ -136,11 +166,12 @@ function ApigeeProvider(providername) {
   var theProvider = this;
   this.preparams = {};
   this.configure = function(responseObject) {
-    if (theProvider.preparams.hasOwnProperty('consumerkey') && theProvider.preparams.hasOwnProperty('consumersecret')) {
-      theProvider.consumerkey = theProvider.preparams.consumerkey;
-      theProvider.consumersecret = theProvider.preparams.consumersecret;
-      theProvider.preparams = {};
+    for (var key in responseObject) {
+      if (responseObject.hasOwnProperty(key)) {
+        theProvider[key] = responseObject[key];
+      }
     }
+    theProvider.preparams = {};
   }
   this.init = function(providername) {
     theProvider.providername = providername;
@@ -148,19 +179,32 @@ function ApigeeProvider(providername) {
   if (providername) this.init(providername);
 }
 
-function ApigeeUser(username,userid,smartkey) {
+function ApigeeUser(responseObject) {
   var theUser = this;
   this.preparams = {};
-  this.init = function(username,userid,smartkey) {
-    theUser.username = username;
-    theUser.userid = userid;
-    theUser.smartkey = smartkey;
+  this.init = function(responseObject) {
+    for (var key in responseObject) {
+      if (responseObject.hasOwnProperty(key)) {
+        theUser[key] = responseObject[key];
+      }
+    }
+    theUser.preparams = {};
   }
-  if (username && (userid && smartkey)) this.init(username,userid,smartkey);
+  this.init(responseObject);
 }
 
 function showResponseMessage(responseMessage) {
   console.log(responseMessage);
+}
+
+function parseAndReturn(theText) {
+  var theJson = '';
+  try {
+    theJson = $.parseJSON(theText);
+  } catch (e) {
+    theJson = theText;
+  }
+  return theJson;
 }
 
 /*

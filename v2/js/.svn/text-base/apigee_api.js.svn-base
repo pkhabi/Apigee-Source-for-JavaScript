@@ -80,6 +80,8 @@
         if (settings.type === 'jsonp') settings.type = 'json';
         console.log('url: '+settings.endpoint+request+'.'+settings.type.split(" ")[0]);
         console.log('data: '+JSON.stringify(headers));
+        console.log('verb: '+settings.verb);
+        //var requestData = (settings.verb === 'get') ? null : null; //JSON.stringify(headers);
         $.ajax({
           url: settings.endpoint+request+'.'+settings.type.split(" ")[0],
           headers: headers,
@@ -91,12 +93,11 @@
             withCredentials: true
           },
           success: function(data,textStatus,jqXHR) {
-            console.log(textStatus);
             returnObject.response_message = textStatus;
             returnObject.payload = data;
             returnObject.xhr = jqXHR;
             if (settings.callback) {
-              var callbackFunction = new Function(settings.callback+'(\''+data+'\')');
+              var callbackFunction = new Function(settings.callback+'(\''+JSON.stringify(data)+'\')');
               callbackFunction();
             }     
           },
